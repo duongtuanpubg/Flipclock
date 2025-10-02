@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>Flip Clock — Ngang (Hours:Minutes:Seconds)</title>
+<style>
+  /* Toàn màn hình, tối ưu cho đặt ngang (landscape) */
+  html,body{
+    height:100%;
+    margin:0;
+    background:#000;
+    color:#fff;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -webkit-text-size-adjust: none;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  .wrap{
+    height:100vh;
+    width:100vw;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+  }
+
+  /* khung đồng hồ ngang */
+  .clock {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap: 18px;
+    width: 100%;
+    padding: 10px 20px;
+    box-sizing: border-box;
+  }
+
+  /* mỗi nhóm chữ (HH / MM / SS) */
+  .group {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:transparent;
+    border-radius:10px;
+  }
+
+  .digits {
+    font-weight:700;
+    color:#fff;
+    line-height:1;
+    letter-spacing:6px;
+    text-align:center;
+    text-rendering:optimizeLegibility;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* kích thước chữ: ưu tiên sử dụng vw để tự co cho ngang iPad */
+  /* Hour và Minute chiều rộng lớn hơn */
+  .digits.hours { font-size:14vw; min-width: 18vw; }
+  .digits.mins  { font-size:14vw; min-width: 18vw; }
+  .digits.secs  { font-size:10vw; min-width: 12vw; opacity:0.95; }
+
+  /* dấu 2 chấm */
+  .sep {
+    font-weight:700;
+    color:#fff;
+    font-size:14vw;
+    line-height:1;
+    opacity:0.95;
+    padding: 0 6px;
+  }
+
+  /* chú thích nhỏ */
+  .meta {
+    position: absolute;
+    bottom: 8px;
+    width:100%;
+    text-align:center;
+    font-size:12px;
+    opacity:0.6;
+    pointer-events:none;
+  }
+
+  /* responsive cho các màn nhỏ hơn */
+  @media (max-width:600px){
+    .digits.hours, .digits.mins { font-size:20vw; }
+    .digits.secs { font-size:14vw; }
+    .sep { font-size:20vw; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="clock" id="clock">
+      <div class="group">
+        <div class="digits hours" id="hh">00</div>
+      </div>
+      <div class="sep" id="sep1">:</div>
+      <div class="group">
+        <div class="digits mins" id="mm">00</div>
+      </div>
+      <div class="sep" id="sep2">:</div>
+      <div class="group">
+        <div class="digits secs" id="ss">00</div>
+      </div>
+    </div>
+    <div class="meta">Xoay iPad ngang · Chạm để 12h/24h · Thêm vào Màn hình chính để ẩn thanh trình duyệt</div>
+  </div>
+
+<script>
+(function(){
+  // dùng var để tương thích iOS 9
+  var use24 = true; // mặc định 24h
+  var hh = document.getElementById('hh');
+  var mm = document.getElementById('mm');
+  var ss = document.getElementById('ss');
+  var sep1 = document.getElementById('sep1');
+  var sep2 = document.getElementById('sep2');
+
+  function pad(n){ return n < 10 ? '0' + n : '' + n; }
+
+  function update(){
+    var now = new Date();
+    var H = now.getHours();
+    var M = now.getMinutes();
+    var S = now.getSeconds();
+
+    var ampm = '';
+    if(!use24){
+      ampm = H >= 12 ? ' PM' : ' AM';
+      H = H % 12;
+      if(H === 0) H = 12;
+    }
+
+    hh.textContent = pad(H);
+    mm.textContent = pad(M);
+    ss.textContent = pad(S);
+
+    // nhấp nháy hai chấm mỗi giây: on/off (chỉ giảm opacity)
+    var on = (S % 2 === 0);
+    sep1.style.opacity = on ? '1' : '0.25';
+    sep2.style.opacity = on ? '1' : '0.25';
+
+    // cập nhật meta nhỏ khi ở 12h
+    var meta = document.querySelector('.meta');
+    meta.textContent = (use24 ? 'Xoay iPad ngang · Chạm để 12h/24h · Thêm vào Màn hình chính để ẩn thanh trình duyệt' : ('Xoay iPad ngang · Đang hiển thị 12h' + ampm + ' · Chạm để 12h/24h'));
+  }
+
+  // bắt đầu vòng lặp đồng hồ - căn chỉnh đến giây tiếp theo
+  update();
+  var msToNext = 1000 - (Date.now() % 1000);
+  setTimeout(function(){
+    update();
+    setInterval(update, 1000);
+  }, msToNext);
+
+  // chạm để toggle 12h/24h
+  document.body.addEventListener('click', function(){
+    use24 = !use24;
+    update();
+  });
+
+  // gợi ý: không thể ngăn khoá màn hình bằng JS trên iOS9 => người dùng chỉnh Auto-Lock trong Cài đặt
+})();
+</script>
+</body>
+</html>
